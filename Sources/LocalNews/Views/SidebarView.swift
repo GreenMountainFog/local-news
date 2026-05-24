@@ -2,7 +2,7 @@ import SwiftUI
 
 struct SidebarView: View {
     @EnvironmentObject var store: AppStore
-    @Binding var destination: SidebarDestination
+    @Binding var destination: SidebarDestination?
 
     var body: some View {
         List(selection: $destination) {
@@ -11,8 +11,8 @@ struct SidebarView: View {
                     .tag(SidebarDestination.allFeed)
                 ForEach(Category.allCases) { cat in
                     Label(cat.displayName, systemImage: cat.systemImage)
-                        .tag(SidebarDestination.category(cat))
                         .badge(unread(for: cat))
+                        .tag(SidebarDestination.category(cat))
                 }
             }
 

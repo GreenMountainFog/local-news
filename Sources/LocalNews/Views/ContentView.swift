@@ -11,7 +11,7 @@ enum SidebarDestination: Hashable {
 
 struct ContentView: View {
     @EnvironmentObject var store: AppStore
-    @State private var destination: SidebarDestination = .allFeed
+    @State private var destination: SidebarDestination? = .allFeed
     @State private var selectedItem: FeedItem?
 
     var body: some View {
@@ -39,7 +39,7 @@ struct ContentView: View {
                         Image(systemName: "arrow.clockwise")
                     }
                 }
-                .help("Refresh all sources")
+                .help("Refresh all sources (⌘R)")
                 .disabled(store.isRefreshing)
             }
         }
@@ -48,7 +48,7 @@ struct ContentView: View {
     @ViewBuilder
     private var contentColumn: some View {
         switch destination {
-        case .allFeed:
+        case .allFeed, nil:
             FeedView(category: nil, selectedItem: $selectedItem)
         case .category(let cat):
             FeedView(category: cat, selectedItem: $selectedItem)

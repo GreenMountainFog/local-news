@@ -1,6 +1,6 @@
 import Foundation
 
-enum Category: String, Codable, CaseIterable, Identifiable {
+enum Category: String, Codable, CaseIterable, Identifiable, Hashable {
     case news, events, weather, sports, arts
 
     var id: String { rawValue }
