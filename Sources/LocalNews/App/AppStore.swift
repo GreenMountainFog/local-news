@@ -13,6 +13,7 @@ final class AppStore: ObservableObject {
     @Published var isRefreshing = false
     @Published var lastRefreshed: Date?
     @Published var selectedCategory: Category? = nil
+    @Published var fetchErrors: [String: String] = [:]   // sourceName → error message
 
     private let persistence = PersistenceService()
     private var refreshTask: Task<Void, Never>?
@@ -32,29 +33,38 @@ final class AppStore: ObservableObject {
 
         let enabledSources = sources.filter(\.isEnabled)
         var fetched: [FeedItem] = []
+        var errors: [String: String] = [:]
 
-        await withTaskGroup(of: [FeedItem].self) { group in
+        await withTaskGroup(of: (String, [FeedItem], String?).self) { group in
             for source in enabledSources {
                 group.addTask {
-                    switch source.fetchMethod {
-                    case .rss(let url):
-                        return (try? await RSSService.fetch(url: url, source: source)) ?? []
-                    case .scrape(let strategy):
-                        return (try? await ScraperService.fetch(strategy: strategy, source: source)) ?? []
-                    case .redditJSON(let url):
-                        return (try? await RedditService.fetch(url: url, source: source)) ?? []
-                    case .nwsWeather:
-                        if let w = try? await WeatherService.fetch() {
+                    do {
+                        switch source.fetchMethod {
+                        case .rss(let url):
+                            let items = try await RSSService.fetch(url: url, source: source)
+                            return (source.name, items, nil)
+                        case .scrape(let strategy):
+                            let items = try await ScraperService.fetch(strategy: strategy, source: source)
+                            return (source.name, items, nil)
+                        case .redditJSON(let url):
+                            let items = try await RedditService.fetch(url: url, source: source)
+                            return (source.name, items, nil)
+                        case .nwsWeather:
+                            let w = try await WeatherService.fetch()
                             await MainActor.run { self.weather = w }
+                            return (source.name, [], nil)
                         }
-                        return []
+                    } catch {
+                        return (source.name, [], error.localizedDescription)
                     }
                 }
             }
-            for await result in group {
-                fetched.append(contentsOf: result)
+            for await (name, items, error) in group {
+                fetched.append(contentsOf: items)
+                if let error { errors[name] = error }
             }
         }
+        fetchErrors = errors
 
         let existing = Set(items.map(\.id))
         let merged = (fetched.filter { !existing.contains($0.id) } + items)

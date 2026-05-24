@@ -47,7 +47,7 @@ struct SidebarView: View {
                     Label("New List", systemImage: "plus")
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(.accent)
+                .foregroundStyle(Color.accentColor)
             }
 
             if let w = store.weather {
@@ -60,9 +60,26 @@ struct SidebarView: View {
                     }
                 }
             }
+
+            if !store.fetchErrors.isEmpty {
+                Section("Source Errors") {
+                    ForEach(Array(store.fetchErrors.keys.sorted()), id: \.self) { name in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Label(name, systemImage: "exclamationmark.triangle")
+                                .foregroundStyle(.orange)
+                                .font(.caption)
+                            Text(store.fetchErrors[name] ?? "")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(2)
+                        }
+                        .padding(.vertical, 2)
+                    }
+                }
+            }
         }
         .listStyle(.sidebar)
         .navigationTitle("Local News")
-        .navigationSplitViewColumnWidth(min: 180, ideal: 200)
+        .navigationSplitViewColumnWidth(min: 180, ideal: 220)
     }
 }
