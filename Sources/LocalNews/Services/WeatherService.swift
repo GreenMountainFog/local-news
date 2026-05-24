@@ -26,7 +26,7 @@ struct WeatherService {
         return WeatherData(
             location: "\(point.properties.relativeLocation.properties.city), \(point.properties.relativeLocation.properties.state)",
             current: current ?? forecast.periods.first.map {
-                .init(temperature: $0.temperature, textDescription: $0.shortForecast, icon: $0.iconURL, windSpeed: $0.windSpeed, relativeHumidity: nil)
+                .init(temperature: $0.temperature, textDescription: $0.shortForecast, icon: $0.icon, windSpeed: $0.windSpeed, relativeHumidity: nil)
             } ?? .init(temperature: 0, textDescription: "Unavailable", icon: nil, windSpeed: "", relativeHumidity: nil),
             periods: forecast.periods,
             fetchedAt: .now

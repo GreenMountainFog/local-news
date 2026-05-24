@@ -14,7 +14,7 @@ struct Bookmark: Identifiable, Codable {
     }
 }
 
-struct Snippet: Identifiable, Codable {
+struct Snippet: Identifiable, Codable, Hashable {
     let id: UUID
     let text: String
     let sourceItem: FeedItem?

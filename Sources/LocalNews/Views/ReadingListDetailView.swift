@@ -3,7 +3,7 @@ import SwiftUI
 struct ReadingListDetailView: View {
     let list: ReadingList
     @EnvironmentObject var store: AppStore
-    @State private var selectedItem: FeedItem?
+    @Binding var selectedItem: FeedItem?
     @State private var isRenaming = false
     @State private var newName = ""
 
@@ -12,8 +12,8 @@ struct ReadingListDetailView: View {
     }
 
     var body: some View {
-        HSplitView {
-            List(currentList.items, selection: $selectedItem) { item in
+        List(selection: $selectedItem) {
+            ForEach(currentList.items) { item in
                 FeedRowView(item: item)
                     .tag(item)
                     .contextMenu {
@@ -24,22 +24,16 @@ struct ReadingListDetailView: View {
                         Button("Open in Browser") { NSWorkspace.shared.open(item.url) }
                     }
             }
-            .listStyle(.plain)
-            .frame(minWidth: 260)
-            .overlay {
-                if currentList.items.isEmpty {
-                    ContentUnavailableView("Empty List", systemImage: "list.bullet",
-                                           description: Text("Right-click any article to add it here"))
-                }
-            }
-
-            if let item = selectedItem {
-                ArticleDetailView(item: item)
-            } else {
-                ContentUnavailableView("Select an Article", systemImage: "newspaper")
+        }
+        .listStyle(.plain)
+        .navigationTitle(currentList.name)
+        .navigationSplitViewColumnWidth(min: 280, ideal: 340)
+        .overlay {
+            if currentList.items.isEmpty {
+                ContentUnavailableView("Empty List", systemImage: "list.bullet",
+                                       description: Text("Right-click any article and choose Add to Reading List"))
             }
         }
-        .navigationTitle(currentList.name)
         .toolbar {
             ToolbarItem {
                 Button("Rename") {

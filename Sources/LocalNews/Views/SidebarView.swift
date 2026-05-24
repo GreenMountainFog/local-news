@@ -2,62 +2,48 @@ import SwiftUI
 
 struct SidebarView: View {
     @EnvironmentObject var store: AppStore
+    @Binding var destination: SidebarDestination
 
     var body: some View {
-        List(selection: $store.selectedCategory) {
+        List(selection: $destination) {
             Section("Feed") {
                 Label("All", systemImage: "tray.2")
-                    .tag(Optional<Category>.none)
+                    .tag(SidebarDestination.allFeed)
                 ForEach(Category.allCases) { cat in
                     Label(cat.displayName, systemImage: cat.systemImage)
-                        .tag(Optional(cat))
-                        .badge(store.items.filter { $0.category == cat && !$0.isRead }.count)
+                        .tag(SidebarDestination.category(cat))
+                        .badge(unread(for: cat))
                 }
             }
 
             Section("Saved") {
-                NavigationLink {
-                    BookmarksView()
-                } label: {
-                    Label("Bookmarks", systemImage: "bookmark")
-                }
-                NavigationLink {
-                    SnippetsView()
-                } label: {
-                    Label("Snippets", systemImage: "text.quote")
-                }
+                Label("Bookmarks", systemImage: "bookmark")
+                    .tag(SidebarDestination.bookmarks)
+                Label("Snippets", systemImage: "text.quote")
+                    .tag(SidebarDestination.snippets)
             }
 
-            Section("Reading Lists") {
-                ForEach(store.readingLists) { list in
-                    NavigationLink {
-                        ReadingListDetailView(list: list)
-                    } label: {
+            if !store.readingLists.isEmpty {
+                Section("Reading Lists") {
+                    ForEach(store.readingLists) { list in
                         Label(list.name, systemImage: "list.bullet")
-                    }
-                    .contextMenu {
-                        Button("Delete", role: .destructive) {
-                            store.deleteReadingList(id: list.id)
-                        }
+                            .tag(SidebarDestination.readingList(list.id))
+                            .contextMenu {
+                                Button("Delete", role: .destructive) {
+                                    store.deleteReadingList(id: list.id)
+                                    if destination == .readingList(list.id) {
+                                        destination = .allFeed
+                                    }
+                                }
+                            }
                     }
                 }
-                Button {
-                    store.createReadingList(name: "New List")
-                } label: {
-                    Label("New List", systemImage: "plus")
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(Color.accentColor)
             }
 
-            if let w = store.weather {
+            if store.weather != nil {
                 Section("Weather") {
-                    NavigationLink {
-                        WeatherView(data: w)
-                    } label: {
-                        Label("\(w.current.temperature)°F · \(w.current.textDescription)",
-                              systemImage: "cloud.sun")
-                    }
+                    Label("Burlington", systemImage: "cloud.sun")
+                        .tag(SidebarDestination.weather)
                 }
             }
 
@@ -81,5 +67,19 @@ struct SidebarView: View {
         .listStyle(.sidebar)
         .navigationTitle("Local News")
         .navigationSplitViewColumnWidth(min: 180, ideal: 220)
+        .toolbar {
+            ToolbarItem {
+                Button {
+                    store.createReadingList(name: "New List")
+                } label: {
+                    Image(systemName: "plus")
+                }
+                .help("New Reading List")
+            }
+        }
+    }
+
+    private func unread(for cat: Category) -> Int {
+        store.items.filter { $0.category == cat && !$0.isRead }.count
     }
 }

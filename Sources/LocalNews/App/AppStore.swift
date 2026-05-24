@@ -12,7 +12,6 @@ final class AppStore: ObservableObject {
     @Published var weather: WeatherData?
     @Published var isRefreshing = false
     @Published var lastRefreshed: Date?
-    @Published var selectedCategory: Category? = nil
     @Published var fetchErrors: [String: String] = [:]   // sourceName → error message
 
     private let persistence = PersistenceService()
@@ -153,6 +152,7 @@ final class AppStore: ObservableObject {
         autoRefreshTimer = Timer.scheduledTimer(withTimeInterval: 15 * 60, repeats: true) { [weak self] _ in
             Task { await self?.refreshAll() }
         }
-        Task { await refreshAll() }
+        // Initial refresh is triggered by ContentView's .task modifier to avoid
+        // publishing changes during the first SwiftUI render cycle.
     }
 }

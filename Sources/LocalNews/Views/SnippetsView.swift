@@ -78,7 +78,7 @@ struct SnippetDetailView: View {
                     Button(source.title) { NSWorkspace.shared.open(source.url) }
                         .buttonStyle(.plain)
                         .font(.subheadline)
-                        .foregroundStyle(.accent)
+                        .foregroundStyle(Color.accentColor)
                     Divider()
                 }
 

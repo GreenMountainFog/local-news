@@ -1,7 +1,7 @@
 import Foundation
 
 /// Fetches and parses RSS 2.0 / Atom feeds.
-struct RSSService: NSObject, XMLParserDelegate {
+struct RSSService {
     static func fetch(url: URL, source: NewsSource) async throws -> [FeedItem] {
         var request = URLRequest(url: url, timeoutInterval: 15)
         request.setValue("LocalNews/1.0 (macOS)", forHTTPHeaderField: "User-Agent")

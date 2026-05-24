@@ -1,13 +1,14 @@
 import SwiftUI
 
 struct FeedView: View {
+    let category: Category?
     @EnvironmentObject var store: AppStore
     @Binding var selectedItem: FeedItem?
     @State private var searchText = ""
 
     private var filtered: [FeedItem] {
         var items = store.items
-        if let cat = store.selectedCategory {
+        if let cat = category {
             items = items.filter { $0.category == cat }
         }
         if !searchText.isEmpty {
@@ -21,19 +22,25 @@ struct FeedView: View {
     }
 
     var body: some View {
-        List(filtered, id: \.id, selection: $selectedItem) { item in
-            FeedRowView(item: item)
-                .tag(item)
-                .contextMenu { contextMenu(for: item) }
+        List(selection: $selectedItem) {
+            ForEach(filtered) { item in
+                FeedRowView(item: item)
+                    .tag(item)
+                    .contextMenu { contextMenu(for: item) }
+            }
         }
         .listStyle(.plain)
         .searchable(text: $searchText, prompt: "Search articles…")
-        .navigationTitle(store.selectedCategory?.displayName ?? "All")
+        .navigationTitle(category?.displayName ?? "All")
         .navigationSplitViewColumnWidth(min: 280, ideal: 340)
         .overlay {
-            if store.items.isEmpty && !store.isRefreshing {
-                ContentUnavailableView("No articles yet", systemImage: "newspaper",
-                                       description: Text("Pull to refresh or press ⌘R"))
+            if filtered.isEmpty && !store.isRefreshing {
+                if store.items.isEmpty {
+                    ContentUnavailableView("No articles yet", systemImage: "newspaper",
+                                           description: Text("Press ⌘R to refresh"))
+                } else if !searchText.isEmpty {
+                    ContentUnavailableView.search(text: searchText)
+                }
             }
         }
     }
