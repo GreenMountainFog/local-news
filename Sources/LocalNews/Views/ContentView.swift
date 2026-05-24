@@ -27,7 +27,6 @@ struct ContentView: View {
             }
         }
         .frame(minWidth: 900, minHeight: 600)
-        .task { await store.refreshAll() }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -47,8 +46,10 @@ struct ContentView: View {
 
     @ViewBuilder
     private var contentColumn: some View {
-        switch destination {
-        case .allFeed, nil:
+        // Unwrap optional before switching — @ViewBuilder handles Optional switches
+        // poorly with compound patterns like `case .foo, nil:`.
+        switch destination ?? .allFeed {
+        case .allFeed:
             FeedView(category: nil, selectedItem: $selectedItem)
         case .category(let cat):
             FeedView(category: cat, selectedItem: $selectedItem)

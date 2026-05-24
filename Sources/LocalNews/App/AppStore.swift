@@ -152,7 +152,11 @@ final class AppStore: ObservableObject {
         autoRefreshTimer = Timer.scheduledTimer(withTimeInterval: 15 * 60, repeats: true) { [weak self] _ in
             Task { await self?.refreshAll() }
         }
-        // Initial refresh is triggered by ContentView's .task modifier to avoid
-        // publishing changes during the first SwiftUI render cycle.
+        // Delay by one run-loop tick so the first SwiftUI render completes
+        // before we publish changes, avoiding the "publishing during view update" warning.
+        Task {
+            try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
+            await refreshAll()
+        }
     }
 }
